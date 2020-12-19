@@ -1,3 +1,11 @@
+# Compile Folders
+bin/
+bin-inter/
+
+# Visual Studio
+.vs/
+*.suo
+
 # Prerequisites
 *.d
 
