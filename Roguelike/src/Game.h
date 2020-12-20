@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 #include "GameObject.h"
 
 namespace CR::Engine {
@@ -8,8 +7,6 @@ namespace CR::Engine {
 	};
 
 	void start();
-	void tick();
-	void render();
 	void addGameObject(GameObject* object);
 	void removeGameObject(GameObject* object);
 }

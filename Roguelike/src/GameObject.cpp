@@ -5,6 +5,14 @@ namespace CR {
 		return skin;
 	}
 	
+	unsigned short GameObject::getSkinColor() const {
+		return skinColor;
+	}
+
+	void GameObject::tick() {
+
+	}
+	
 	int GameObject::getX() const {
 		return x;
 	}
