@@ -14,9 +14,12 @@
 #include "Engine/Game.h"
 #include "Engine/GameObject.h"
 #include "Engine/CustomGameObject.h"
-#include "Object/AmmoTile.h"
-#include "Object/HealthTile.h"
-#include "Object/ObstacleTile.h"
+#include "Object/Tiles/AmmoTile.h"
+#include "Object/Tiles/HealthTile.h"
+#include "Object/Tiles/EndTile.h"
+#include "Object/Tiles/DestroyableTile.h"
+#include "Object/Tiles/PDestroyableTile.h"
+#include "Entity/Player.h"
 #include "Events/KeyEvent.h"
 
 const static float fps = 80;
@@ -79,7 +82,7 @@ static void processInput() {
 		if (ke.keyValue == 'u')
 			running = false;
 
-		for (int i = 0; i < gameObjects.size(); i++)
+		for (size_t i = 0; i < gameObjects.size(); i++)
 			gameObjects[i]->onKeyEvent(ke);
 	}
 }
@@ -141,6 +144,11 @@ static void render() {
 }
 
 static void handleGameObjects() {
+	while (!gameObjectAddQueue.empty()) {
+		gameObjects.push_back(gameObjectAddQueue.front());
+		gameObjectAddQueue.pop();
+	}
+
 	while (!gameObjectRemoveQueue.empty()) {
 		auto iter = std::find(gameObjects.begin(), gameObjects.end(), gameObjectRemoveQueue.front().first);
 
@@ -153,18 +161,13 @@ static void handleGameObjects() {
 
 		gameObjectRemoveQueue.pop();
 	}
-
-	while (!gameObjectAddQueue.empty()) {
-		gameObjects.push_back(gameObjectAddQueue.front());
-		gameObjectAddQueue.pop();
-	}
 }
 
 static void gameLoop() {
 	using hrclock = std::chrono::high_resolution_clock;
 
-	int msPerUpdate = round(1000 / fps);
-	int lag = 0;
+	long long msPerUpdate = (long long) round(1000 / fps);
+	long long lag = 0;
 	hrclock::time_point lastTime = hrclock::now();
 
 	// Debug (TODO: remove)
@@ -173,7 +176,7 @@ static void gameLoop() {
 
 	while (running) {
 		hrclock::time_point currentTime = hrclock::now();
-		int elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
+		long long elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
 		lag += elapsed;
 		lastTime = currentTime;
 
@@ -206,6 +209,11 @@ static void gameLoop() {
 
 static std::vector<CR::GameObject*> roomObjects;
 
+// min, max inclusive
+static int getRandomNumberBetween(int min, int max) {
+	return (rand() % (max - min + 1)) + min;	
+}
+
 namespace CR::Engine {
 	void start() {
 		screenBuffer = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
@@ -228,7 +236,7 @@ namespace CR::Engine {
 
 		gameLoop();
 
-		// clean up
+		// TODO: clean up
 	}
 
 	void generateRandomRoom() {
@@ -239,9 +247,16 @@ namespace CR::Engine {
 
 		roomObjects.clear();
 
-		bool broom[mapWidth][mapHeight];
-		int room[mapWidth][mapHeight];
+		// 0 - floor
+		// 1 - wall
+		// 2 - start point
+		// 3 - end tile
+		// 4 - ammo tile
+		// 5 - health tile
+		// 6 - pdestructable tile (only the player can destroy it)
+		char room[mapWidth][mapHeight] = {};
 
+		// Border
 		for (int y = 0; y < mapHeight - 1; y++) {
 			if (y == 0 || y == mapHeight - 2) {
 				for (int x = 0; x < mapWidth; x++)
@@ -254,9 +269,10 @@ namespace CR::Engine {
 			room[mapWidth - 1][y] = 1;
 		}
 
+		// Walls
 		for (int x = 1; x < mapWidth - 1; x++)
 			for (int y = 1; y < mapHeight - 2; y++)
-				room[x][y] = rand() % 100 < 34 ? 1 : 0;
+				room[x][y] = rand() % 100 < 31 ? 1 : 0;
 
 		for (int i = 0; i < 5; i++) {
 			for (int x = 1; x < mapWidth - 1; x++) {
@@ -273,23 +289,6 @@ namespace CR::Engine {
 					}
 				}
 
-				/*if (x != 0 && room[x - 1][y])
-					adjacentWalls++;
-				if (x != mapWidth - 1 && room[x + 1][y])
-					adjacentWalls++;
-				if (y != 0 && room[x][y - 1])
-					adjacentWalls++;
-				if (y != mapHeight - 1 && room[x][y + 1])
-					adjacentWalls++;
-				if (x != 0 && y != 0 && room[x - 1][y - 1])
-					adjacentWalls++;
-				if (x != mapWidth - 1 && y != mapHeight - 1 && room[x + 1][y + 1])
-					adjacentWalls++;
-				if (x != mapWidth - 1 && y != 0 && room[x + 1][y - 1])
-					adjacentWalls++;
-				if (x != 0 && y != mapHeight - 1 && room[x - 1][y + 1])
-					adjacentWalls++;*/
-
 				int adjacentFloors = 8 - adjacentWalls;
 
 				if (room[x][y] == 0 && adjacentFloors < 4)
@@ -300,31 +299,41 @@ namespace CR::Engine {
 			}
 		}
 
-		/*int ammoTiles = 5, healthTiles = 2;
+		// Player
+		int playerX = getRandomNumberBetween(3, mapWidth / 4), playerY = getRandomNumberBetween(3, mapHeight - 4);
+		for (int i = playerX - 2; i <= playerX + 2; i++)
+			for (int j = playerY - 2; j <= playerY + 2; j++)
+				room[i][j] = (i == playerX - 2 || i == playerX + 2 || j == playerY - 2 || j == playerY + 2 ) ? 6 : 0;
+
+		room[playerX][playerY] = 2;
+		((Entities::Player*)getPlayer())->moveTo({ (float)playerX, (float)playerY });
+
+		// End tile
+		int endX = getRandomNumberBetween(mapWidth / 4 * 3, mapWidth - 2), endY = getRandomNumberBetween(3, mapHeight - 3);
+		room[endX][endY] = 3;
+
+		room[playerX][playerY] = 2;
+		((Entities::Player*)getPlayer())->moveTo({ (float)playerX, (float)playerY });
+
+		// Ammo tiles and health tiles
+		int ammoTiles = 5, healthTiles = 2;
 		while (ammoTiles > 0 || healthTiles > 0) {
 			int x = (rand() % (mapWidth - 2)) + 1;
 			int y = (rand() % (mapHeight - 3)) + 1;
 
-			Objects::Tile* t;
+			if (room[x][y] != 0 && room[x][y] != 1)
+				continue;
 
 			if (ammoTiles > 0) {
-				t = new Objects::AmmoTile({ x, y }, 10);
-				for (int i = x - 1; i <= x + 1; i++)
-					for (int j = y - 1; j <= y + 1; j++)
-						room[i][j] = 0;
+				room[x][y] = 4;
 				ammoTiles--;
 			} else {
-				t = new Objects::HealthTile({ x, y }, 10);
-				for (int i = x - 1; i <= x + 1; i++)
-					for (int j = y - 1; j <= y + 1; j++)
-						room[i][j] = 0;
+				room[x][y] = 5;
 				healthTiles--;
 			}
-				
-			roomObjects.push_back(t);
-			addGameObject(t);
-		}*/
+		}
 
+		// actually generate the map
 		for (int x = 1; x < mapWidth - 1; x++) {
 			for (int y = 1; y < mapHeight - 2; y++) {
 				GameObject* obj;
@@ -332,7 +341,23 @@ namespace CR::Engine {
 
 				switch (room[x][y]) {
 				case 1:
-					obj = new Objects::ObstacleTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
+					obj = new Objects::DestroyableTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
+					break;
+
+				case 3:
+					obj = new Objects::EndTile({ x, y });
+					break;
+
+				case 4:
+					obj = new Objects::AmmoTile({ x, y }, 10);
+					break;
+				
+				case 5:
+					obj = new Objects::HealthTile({ x, y }, 10);
+					break;
+
+				case 6:
+					obj = new Objects::PDestroyableTile(' ', BACKGROUND_RED, { x, y }, 1);
 					break;
 				
 				default:

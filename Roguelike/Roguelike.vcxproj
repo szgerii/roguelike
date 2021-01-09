@@ -154,15 +154,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Object\AmmoTile.cpp" />
-    <ClCompile Include="src\Object\HealthTile.cpp" />
+    <ClCompile Include="src\Object\Tiles\EndTile.cpp" />
+    <ClCompile Include="src\Object\Tiles\PDestroyableTile.cpp" />
+    <ClCompile Include="src\Object\Tiles\AmmoTile.cpp" />
+    <ClCompile Include="src\Object\Tiles\HealthTile.cpp" />
     <ClCompile Include="src\Weapon\BoomBoomPistol.cpp" />
     <ClCompile Include="src\Entity\Bullets\ExplodingBullet.cpp" />
     <ClCompile Include="src\Entity\Enemies\Enemy.cpp" />
     <ClCompile Include="src\Engine\CustomGameObject.cpp" />
     <ClCompile Include="src\Entity\Bullets\Bullet.cpp" />
     <ClCompile Include="src\Events\CollisionEvent.h" />
-    <ClCompile Include="src\Object\ObstacleTile.cpp" />
+    <ClCompile Include="src\Object\Tiles\DestroyableTile.cpp" />
     <ClCompile Include="src\Object\Walls\HollowRectWall.cpp" />
     <ClCompile Include="src\Object\Walls\RectWall.cpp" />
     <ClCompile Include="src\Entity\Player.cpp" />
@@ -175,14 +177,16 @@
     <ClCompile Include="src\Weapon\Weapon.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Object\AmmoTile.h" />
-    <ClInclude Include="src\Object\HealthTile.h" />
+    <ClInclude Include="src\Object\Tiles\EndTile.h" />
+    <ClInclude Include="src\Object\Tiles\PDestroyableTile.h" />
+    <ClInclude Include="src\Object\Tiles\AmmoTile.h" />
+    <ClInclude Include="src\Object\Tiles\HealthTile.h" />
     <ClInclude Include="src\Weapon\BoomBoomPistol.h" />
     <ClInclude Include="src\Entity\Bullets\ExplodingBullet.h" />
     <ClInclude Include="src\Entity\Enemies\Enemy.h" />
     <ClInclude Include="src\Engine\CustomGameObject.h" />
     <ClInclude Include="src\Entity\Bullets\Bullet.h" />
-    <ClInclude Include="src\Object\ObstacleTile.h" />
+    <ClInclude Include="src\Object\Tiles\DestroyableTile.h" />
     <ClInclude Include="src\Object\Walls\HollowRectWall.h" />
     <ClInclude Include="src\Object\Walls\RectWall.h" />
     <ClInclude Include="src\Entity\Player.h" />
@@ -190,7 +194,7 @@
     <ClInclude Include="src\Events\KeyEvent.h" />
     <ClInclude Include="src\Engine\GameObject.h" />
     <ClInclude Include="src\Engine\Game.h" />
-    <ClInclude Include="src\Object\Tile.h" />
+    <ClInclude Include="src\Object\Tiles\Tile.h" />
     <ClInclude Include="src\Object\Walls\LineWall.h" />
     <ClInclude Include="src\Weapon\Weapon.h" />
   </ItemGroup>

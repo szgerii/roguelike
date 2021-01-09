@@ -37,7 +37,7 @@ namespace CR {
 		Vector2<float> getPos() const;
 		float getX() const;
 		float getY() const;
-		virtual void hurt(float amount) {}
+		virtual void hurt(float amount, GameObject* from) {}
 		virtual void die();
 		virtual void updateCollision();
 		virtual void tick() {}

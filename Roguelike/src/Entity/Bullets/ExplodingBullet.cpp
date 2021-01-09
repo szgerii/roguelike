@@ -6,8 +6,8 @@ namespace CR::Entities {
 			int mapWidth = Engine::getMapWidth();
 			int mapHeight = Engine::getMapHeight();
 
-			int xRounded = round(position.x);
-			int yRounded = round(position.y);
+			int xRounded = (int)round(position.x);
+			int yRounded = (int)round(position.y);
 
 			int startX = xRounded == 0 ? xRounded : xRounded - 1,
 				endX = xRounded == Engine::getMapWidth() - 1 ? xRounded : xRounded + 1,
@@ -62,9 +62,14 @@ namespace CR::Entities {
 				}
 			}
 		}*/
+		
+		collisionCheck();
+	}
+
+	void ExplodingBullet::collisionCheck() {
 		bool hit = false;
-		int xRounded = round(position.x);
-		int yRounded = round(position.y);
+		int xRounded = (int)round(position.x);
+		int yRounded = (int)round(position.y);
 
 		int startX = xRounded == 0 ? xRounded : xRounded - 1,
 			endX = xRounded == Engine::getMapWidth() - 1 ? xRounded : xRounded + 1,
@@ -88,7 +93,7 @@ namespace CR::Entities {
 
 					if (collObj != nullptr && collObj != this) {
 						bool ignored = false;
-						
+
 						for (auto& obj : ignoreList) {
 							if (obj == collObj) {
 								ignored = true;
@@ -107,9 +112,5 @@ namespace CR::Entities {
 			dead = true;
 			deathTime = std::chrono::high_resolution_clock::now();
 		}
-	}
-	
-	void ExplodingBullet::handleHit(GameObject* obj) {
-		obj->hurt(damage);
 	}
 }

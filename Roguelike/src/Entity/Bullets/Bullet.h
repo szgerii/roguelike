@@ -7,12 +7,18 @@
 
 namespace CR::Entities {
 	class Bullet : public Entity {
-	public:
-		Bullet(char skin, unsigned short skinColor, Vector2<float> start, float speed, float damage, Direction direction)
-			: Entity(skin, skinColor, start, 1), speed(speed), damage(damage), direction(direction) {}
+	protected:
+		float speed, damage;
+		Direction direction;
+		std::vector<GameObject*> ignoreList;
+		GameObject* sender;
 
-		Bullet(char skin, unsigned short skinColor, float startX, float startY, float speed, float damage, Direction direction)
-			: Entity(skin, skinColor, startX, startY, 1), speed(speed), damage(damage), direction(direction) {}
+	public:
+		Bullet(char skin, unsigned short skinColor, Vector2<float> start, float speed, float damage, Direction direction, GameObject* sender, bool initialCollisionCheck=true)
+			: Entity(skin, skinColor, start, 1), speed(speed), damage(damage), direction(direction), sender(sender) {
+			if (initialCollisionCheck)
+				collisionCheck();
+		}
 
 		virtual void tick();
 		virtual void hurt() {} // can't take damage
@@ -22,11 +28,7 @@ namespace CR::Entities {
 		
 	protected:
 		virtual void handleHit(GameObject* obj);
-
-	protected:
-		float speed, damage;
-		Direction direction;
-		std::vector<GameObject*> ignoreList;
+		virtual void collisionCheck();
 	};
 }
 

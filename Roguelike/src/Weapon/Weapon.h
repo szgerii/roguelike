@@ -6,7 +6,6 @@
 namespace CR::Weapons {
 	class Weapon {
 	public:
-		// PICKUP: proper weapon stat display
 		std::chrono::steady_clock::time_point lastFire;
 		Weapon(float damage, float hBulletSpeed, float vBulletSpeed, int cooldownMs, int magSize, int maxAmmo)
 			: damage(damage), hBulletSpeed(hBulletSpeed), vBulletSpeed(vBulletSpeed), cooldown(cooldownMs), magazineSize(magSize), magazine(magSize), maxAmmo(maxAmmo), ammo(magSize), statIndex(-1) {}

@@ -26,16 +26,16 @@ namespace CR::Entities {
 		if (position.y < 0)
 			position.x = 0;
 		if (position.x >= mapWidth)
-			position.x = mapWidth;
+			position.x = (float)mapWidth;
 		if (position.y >= mapHeight)
-			position.y = mapHeight;
+			position.y = (float)mapHeight;
 	}
 
 	void Entity::moveTo(const Vector2<float>& position) {
 		this->position = position;
 	}
 
-	void Entity::hurt(float amount) {
+	void Entity::hurt(float amount, GameObject* from) {
 		health -= amount;
 		
 		if (health <= 0)

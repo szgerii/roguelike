@@ -4,7 +4,7 @@
 namespace CR::Entities {
 	class Enemy : public Entity {
 	public:
-		Enemy(char skin, unsigned short skinColor, Vector2<float> pos, int maxHealth)
+		Enemy(char skin, unsigned short skinColor, Vector2<float> pos, float maxHealth)
 			: Entity(skin, skinColor, pos, maxHealth)
 		{
 			vWalk = 0.2f;

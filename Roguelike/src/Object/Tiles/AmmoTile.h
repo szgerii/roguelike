@@ -1,5 +1,5 @@
 #pragma once
-#include "Tile.h"
+#include "Object/Tiles/Tile.h"
 
 namespace CR::Objects {
 	class AmmoTile : public Tile {
@@ -10,6 +10,6 @@ namespace CR::Objects {
 		AmmoTile(const Vector2<int>& pos, int ammoAmount)
 			: Tile(' ', BACKGROUND_BLUE | BACKGROUND_INTENSITY, pos), ammoAmount(ammoAmount) { }
 
-		virtual void hurt(float amount);
+		virtual void hurt(float amount, GameObject* from);
 	};
 }

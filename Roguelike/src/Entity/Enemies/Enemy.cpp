@@ -5,8 +5,8 @@ namespace CR::Entities {
 	void Enemy::tick() {
 		const Vector2<float>& playerLocation = Engine::getPlayer()->getPos();
 
-		int xDiff = round(playerLocation.x) - round(position.x);
-		int yDiff = round(playerLocation.y) - round(position.y);
+		int xDiff = (int)round(playerLocation.x) - (int)round(position.x);
+		int yDiff = (int)round(playerLocation.y) - (int)round(position.y);
 		
 		if (xDiff == 0) {
 			if (yDiff < 0)

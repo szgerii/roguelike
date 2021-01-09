@@ -1,7 +1,7 @@
-#include "Object/ObstacleTile.h"
+#include "DestroyableTile.h"
 
 namespace CR::Objects {
-	void ObstacleTile::hurt(float amount) {
+	void DestroyableTile::hurt(float amount, GameObject* from) {
 		health--;
 
 		if (health == 0)

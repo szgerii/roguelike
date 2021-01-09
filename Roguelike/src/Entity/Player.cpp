@@ -36,10 +36,10 @@ namespace CR::Entities {
 		else if (Engine::keyPressed('k'))
 			currentWeapon->fire(Direction::DOWN);
 
-		if (vDelta != 0 && hDelta != 0) {
+		/*if (vDelta != 0 && hDelta != 0) {
 			vDelta /= 2;
 			hDelta /= 2;
-		}
+		}*/
 
 		move({ hDelta, vDelta });
 
@@ -47,8 +47,8 @@ namespace CR::Entities {
 			debugTimeout--;
 	}
 
-	void Player::hurt(float amount) {
-		Entity::hurt(amount);
+	void Player::hurt(float amount, GameObject* from) {
+		Entity::hurt(amount, from);
 		Engine::modifyGUIText(healthStatIndex, "Health: " + std::to_string((int) health) + "/" + std::to_string((int) maxHealth));
 	}
 

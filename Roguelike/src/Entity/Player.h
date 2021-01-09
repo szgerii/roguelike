@@ -10,30 +10,19 @@ namespace CR::Entities {
 		int healthStatIndex, weaponStatIndex;
 
 	public:
-		Player()
-			: Entity('@', FOREGROUND_BLUE | FOREGROUND_INTENSITY, 1, 1, 20)
+		Player(const Vector2<float> pos)
+			: Entity('@', FOREGROUND_BLUE | FOREGROUND_INTENSITY, pos, 20)
 		{
-			vWalk = 0.4f;
-			hWalk = 0.2f;
-			vRun = 0.7f;
-			hRun = 0.5f;
-			healthStatIndex = Engine::addGUIText("Health: " + std::to_string((int) health) + "/" + std::to_string((int) maxHealth));
-			weaponStatIndex = Engine::addGUIText("Weapon: ?");
-		}
-
-		Player(float x, float y)
-			: Entity('@', FOREGROUND_BLUE | FOREGROUND_INTENSITY, x, y, 20)
-		{
-			vWalk = 0.4f;
-			hWalk = 0.2f;
-			vRun = 0.7f;
-			hRun = 0.5f;
+			vWalk = 0.22f;
+			hWalk = 0.35f;
+			vRun = 0.55f;
+			hRun = 0.55f;
 			healthStatIndex = Engine::addGUIText("Health: " + std::to_string((int) health) + "/" + std::to_string((int) maxHealth));
 			weaponStatIndex = Engine::addGUIText("Weapon: ?");
 		}
 
 		void tick();
-		void hurt(float amount);
+		void hurt(float amount, GameObject* from);
 		void heal(float amount);
 		void changeWeapon(Weapons::Weapon* newWeapon, bool noDelete = false);
 	};

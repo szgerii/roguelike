@@ -25,10 +25,10 @@ namespace CR::Weapons {
 		Vector2<float> startPos = owner->getPos();
 		if (direction == Direction::LEFT || direction == Direction::RIGHT) {
 			startPos.x += direction == Direction::LEFT ? -1 : 1;
-			bullet = new Entities::Bullet('-', WHITE, startPos, hBulletSpeed, damage, direction);
+			bullet = new Entities::Bullet('-', WHITE, startPos, hBulletSpeed, damage, direction, owner);
 		} else {
 			startPos.y += direction == Direction::UP ? -1 : 1;
-			bullet = new Entities::Bullet('-', WHITE, startPos, vBulletSpeed, damage, direction);
+			bullet = new Entities::Bullet('-', WHITE, startPos, vBulletSpeed, damage, direction, owner);
 		}
 		
 		bullet->addToIgnoreList(owner);

@@ -22,6 +22,14 @@ namespace CR::Entities {
 			break;
 		}
 
+		collisionCheck();
+	}
+
+	void Bullet::handleHit(GameObject* obj) {
+		obj->hurt(damage, sender);
+	}
+
+	void Bullet::collisionCheck() {
 		GameObject* collObj = Engine::objectFromCoord({ (int)round(position.x), (int)round(position.y) });
 
 		if (collObj != nullptr && collObj != this) {
@@ -32,10 +40,6 @@ namespace CR::Entities {
 			handleHit(collObj);
 			die();
 		}
-	}
-
-	void Bullet::handleHit(GameObject* obj) {
-		obj->hurt(damage);
 	}
 
 	void Bullet::die() {
