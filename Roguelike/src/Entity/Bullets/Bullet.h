@@ -23,7 +23,6 @@ namespace CR::Entities {
 		virtual void tick();
 		virtual void hurt() {} // can't take damage
 		virtual void heal() {} // can't heal
-		virtual void die();
 		virtual void addToIgnoreList(GameObject* obj);
 		
 	protected:

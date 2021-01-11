@@ -16,7 +16,7 @@ namespace CR::Entities {
 
 	protected:
 		bool dead = false;
-		std::chrono::steady_clock::time_point deathTime;
+		long long deathTime;
 		virtual void collisionCheck();
 	};
 }

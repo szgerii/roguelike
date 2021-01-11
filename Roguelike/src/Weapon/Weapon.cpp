@@ -1,9 +1,6 @@
 #include "Weapon.h"
 #include "Entity/Bullets/Bullet.h"
-
-#ifndef WHITE
-#define WHITE FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN
-#endif
+#include "Utils.h"
 
 namespace CR::Weapons {
 	void Weapon::changeOwner(GameObject* owner) {
@@ -12,31 +9,31 @@ namespace CR::Weapons {
 
 	void Weapon::setStatIndex(int index) {
 		statIndex = index;
-		updateStat();
+		drawStat();
 	}
 
 	void Weapon::fire(Direction direction) {
-		namespace chrono = std::chrono;
+		namespace chr = std::chrono;
 
-		if (magazine <= 0 || chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - lastFire).count() < cooldown || owner == nullptr)
+		if (magazine <= 0 || getCurrentTime() - lastFireTime < cooldown || owner == nullptr)
 			return;
 
 		Entities::Bullet* bullet = nullptr;
 		Vector2<float> startPos = owner->getPos();
 		if (direction == Direction::LEFT || direction == Direction::RIGHT) {
 			startPos.x += direction == Direction::LEFT ? -1 : 1;
-			bullet = new Entities::Bullet('-', WHITE, startPos, hBulletSpeed, damage, direction, owner);
+			bullet = new Entities::Bullet('-', FG_WHITE, startPos, hBulletSpeed, damage, direction, owner);
 		} else {
 			startPos.y += direction == Direction::UP ? -1 : 1;
-			bullet = new Entities::Bullet('-', WHITE, startPos, vBulletSpeed, damage, direction, owner);
+			bullet = new Entities::Bullet('-', FG_WHITE, startPos, vBulletSpeed, damage, direction, owner);
 		}
 		
 		bullet->addToIgnoreList(owner);
 		Engine::addGameObject(bullet);
 		magazine--;
 
-		lastFire = chrono::steady_clock::now();
-		updateStat();
+		lastFireTime = getCurrentTime();
+		drawStat();
 	}
 
 	void Weapon::reload() {
@@ -46,7 +43,7 @@ namespace CR::Weapons {
 		magazine += amount;
 		ammo -= amount;
 
-		updateStat();
+		drawStat();
 	}
 
 	/// <summary>
@@ -59,11 +56,11 @@ namespace CR::Weapons {
 		if (ammo > maxAmmo) {
 			int diff = ammo - maxAmmo;
 			ammo -= diff;
-			updateStat();
+			drawStat();
 			return diff;
 		}
 
-		updateStat();
+		drawStat();
 		return 0;
 	}
 
@@ -83,8 +80,12 @@ namespace CR::Weapons {
 		return maxAmmo;
 	}
 
-	void Weapon::updateStat() {
+	int Weapon::getPickupSize() {
+		return pickupSize;
+	}
+
+	void Weapon::drawStat() {
 		if (statIndex != -1)
-			Engine::modifyGUIText(statIndex, "Weapon: " + std::to_string(magazine) + "/" + std::to_string(magazineSize) + " (" + std::to_string(ammo) + ")");
+			Engine::modifyGUIText(statIndex, std::string(name) + ": " + std::to_string(magazine) + "/" + std::to_string(magazineSize) + " (" + std::to_string(ammo) + ") [DPS: " + std::to_string(dps) + " - Max Ammo: " + std::to_string(maxAmmo) + " - Ammo Pickup: " + std::to_string(pickupSize) + "]");
 	}
 }

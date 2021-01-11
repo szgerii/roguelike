@@ -26,11 +26,8 @@ namespace CR {
 		Vector2<float> position;
 
 	public:
-		GameObject(char skin, unsigned short skinColor, Vector2<float> position, bool customObject = false)
+		GameObject(char skin, unsigned short skinColor, const Vector2<float>& position, bool customObject = false)
 			: skin(skin), skinColor(skinColor), position(position), customObject(customObject) {}
-
-		GameObject(char skin, unsigned short skinColor, float x, float y, bool customObject = false)
-			: skin(skin), skinColor(skinColor), position({ x, y }), customObject(customObject) {}
 
 		virtual char getSkin() const;
 		virtual unsigned short getSkinColor() const;

@@ -14,15 +14,11 @@ namespace CR::Entities {
 				startY = yRounded == 0 ? yRounded : yRounded - 1,
 				endY = yRounded == Engine::getMapWidth() - 1 ? yRounded : yRounded + 1;
 			
-			long long elapsed;
-			{
-				using namespace std::chrono;
-				elapsed = duration_cast<milliseconds>(high_resolution_clock::now() - deathTime).count();
-			}
+			long long elapsed = getCurrentTime() - deathTime;
 
 			for (int x = startX; x <= endX; x++)
 				for (int y = startY; y <= endY; y++)
-					Engine::addToOverlay(x, y, '#', elapsed < 100 ? FOREGROUND_RED : FOREGROUND_RED | FOREGROUND_INTENSITY);
+					Engine::addToOverlay({ x, y }, '#', elapsed < 100 ? FOREGROUND_RED : FOREGROUND_RED | FOREGROUND_INTENSITY);
 
 			if (elapsed > 200)
 				die();
@@ -110,7 +106,7 @@ namespace CR::Entities {
 			}
 
 			dead = true;
-			deathTime = std::chrono::high_resolution_clock::now();
+			deathTime = getCurrentTime();
 		}
 	}
 }

@@ -8,7 +8,9 @@ namespace CR::Entities {
 	void Player::tick() {
 		float vDelta = 0, hDelta = 0;
 		bool sprintActive = Engine::keyPressed('o');
+		Weapons::Weapon* currentWeapon = inventory.getCurrentItem();
 
+		// Movement
 		if (Engine::keyPressed('w'))
 			vDelta -= sprintActive ? vRun : vWalk;
 		if (Engine::keyPressed('s'))
@@ -18,23 +20,45 @@ namespace CR::Entities {
 		if (Engine::keyPressed('d'))
 			hDelta += sprintActive ? hRun : hWalk;
 
+		// Reload weapon
 		if (Engine::keyPressed('r'))
 			currentWeapon->reload();
 
 		// DEBUG (TODO: remove)
 		if (Engine::keyPressed('z') && debugTimeout == 0) {
+			// DEBUG: add ammo
 			currentWeapon->addAmmo(30);
 			debugTimeout = 15;
 		}
 
-		if (Engine::keyPressed('j'))
-			currentWeapon->fire(Direction::LEFT);
-		else if (Engine::keyPressed('l'))
-			currentWeapon->fire(Direction::RIGHT);
-		else if (Engine::keyPressed('i'))
-			currentWeapon->fire(Direction::UP);
-		else if (Engine::keyPressed('k'))
-			currentWeapon->fire(Direction::DOWN);
+		if (Engine::keyPressed('\t') && debugTimeout == 0) {
+			// next weapon
+			inventory.nextItem();
+			debugTimeout = 15;
+		} else if (Engine::keyPressed('q')) {
+			// drop item
+			inventory.dropItem();
+		} else if (Engine::keyPressed(' ') || currentWeapon == nullptr) {
+			// check melee
+			if (Engine::keyPressed('j'))
+				meleeAttack(LEFT);
+			else if (Engine::keyPressed('l'))
+				meleeAttack(RIGHT);
+			else if (Engine::keyPressed('i'))
+				meleeAttack(UP);
+			else if (Engine::keyPressed('k'))
+				meleeAttack(DOWN);
+		} else {
+			// check shooting
+			if (Engine::keyPressed('j'))
+				currentWeapon->fire(LEFT);
+			else if (Engine::keyPressed('l'))
+				currentWeapon->fire(RIGHT);
+			else if (Engine::keyPressed('i'))
+				currentWeapon->fire(UP);
+			else if (Engine::keyPressed('k'))
+				currentWeapon->fire(DOWN);
+		}
 
 		/*if (vDelta != 0 && hDelta != 0) {
 			vDelta /= 2;
@@ -57,12 +81,9 @@ namespace CR::Entities {
 		Engine::modifyGUIText(healthStatIndex, "Health: " + std::to_string((int) health) + "/" + std::to_string((int) maxHealth));
 	}
 
-	void Player::changeWeapon(Weapons::Weapon* newWeapon, bool noDelete) {
-		if (currentWeapon != nullptr)
-			currentWeapon->setStatIndex(-1);
+	void Player::die() {
+		Engine::removeGameObject(healthbar, true);
 
-		newWeapon->setStatIndex(weaponStatIndex);
-
-		Entity::changeWeapon(newWeapon, noDelete);
+		Entity::die();
 	}
 }

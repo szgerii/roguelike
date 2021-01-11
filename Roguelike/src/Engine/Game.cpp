@@ -127,17 +127,17 @@ static void render() {
 	int offset = 0;
 	for (auto& text : guiTexts) {
 		if (offset == 0) {
-			writeStringToScreenBuffer(text, WHITE, offset, mapHeight - 1);
+			writeStringToScreenBuffer(text, FG_WHITE, offset, mapHeight - 1);
 			offset += text.length();
-		} else {
-			writeStringToScreenBuffer(" | " + text, WHITE, offset, mapHeight - 1);
+		} else if (text != "") {
+			writeStringToScreenBuffer(" | " + text, FG_WHITE, offset, mapHeight - 1);
 			offset += text.length() + 3;
 		}
 	}
 
 	// DEBUG (TODO: remove)
 	std::string debugStats = std::to_string(tpsCounter) + "/" + std::to_string(fpsCounter) + "/" + std::to_string(dropsCounter);
-	writeStringToScreenBuffer(debugStats, WHITE, mapWidth - debugStats.length(), mapHeight - 1);
+	writeStringToScreenBuffer(debugStats, FG_WHITE, mapWidth - debugStats.length(), mapHeight - 1);
 
 	SMALL_RECT sr = SMALL_RECT{ 0, 0, mapWidth, mapHeight };
 	WriteConsoleOutputA(screenBuffer, screen[0], { mapWidth, mapHeight }, { 0, 0 }, &sr);
@@ -349,7 +349,7 @@ namespace CR::Engine {
 					break;
 
 				case 4:
-					obj = new Objects::AmmoTile({ x, y }, 10);
+					obj = new Objects::AmmoTile({ x, y });
 					break;
 				
 				case 5:
@@ -357,7 +357,7 @@ namespace CR::Engine {
 					break;
 
 				case 6:
-					obj = new Objects::PDestroyableTile(' ', BACKGROUND_RED, { x, y }, 1);
+					obj = new Objects::PDestroyableTile(' ', BACKGROUND_RED | BACKGROUND_GREEN, { x, y }, 1);
 					break;
 				
 				default:
@@ -449,7 +449,7 @@ namespace CR::Engine {
 		guiTexts[index] = text;
 	}
 
-	void addToOverlay(int x, int y, char ch, unsigned short color) {
-		overlay[y][x] = CHAR_INFO{ (wchar_t)ch, color };
+	void addToOverlay(const Vector2<int>& pos, char ch, unsigned short color) {
+		overlay[pos.y][pos.x] = CHAR_INFO{ (wchar_t)ch, color };
 	}
 }

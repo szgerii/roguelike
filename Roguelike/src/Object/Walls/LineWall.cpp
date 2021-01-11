@@ -4,20 +4,6 @@
 #include "Engine/Game.h"
 
 namespace CR::Objects {
-	LineWall::LineWall(char skin, Vector2<int>& start, Vector2<int>& end)
-		: CustomGameObject(skin, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED, 0, 0)
-	{
-		init(start, end);
-	}
-
-	LineWall::LineWall(char skin, int startX, int startY, int endX, int endY)
-		: CustomGameObject(skin, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED, 0, 0)
-	{
-		Vector2 start(startX, startY);
-		Vector2 end(endX, endY);
-		init(start, end);
-	}
-	
 	void LineWall::updateCollision() {
 		for (auto& coord : coords)
 			Engine::addCollision(coord, this);

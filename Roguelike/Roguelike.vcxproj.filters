@@ -48,9 +48,6 @@
     <ClCompile Include="src\Events\CollisionEvent.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\CustomGameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Entity\Enemies\Enemy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -76,6 +73,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Object\Tiles\EndTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object\Tiles\WeaponTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particle\Particle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particle\TrackingParticle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particle\Healthbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -138,6 +147,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Object\Tiles\EndTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entity\Inventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Object\Tiles\WeaponTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Particle\Particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Particle\TrackingParticle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Particle\Healthbar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

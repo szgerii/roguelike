@@ -3,7 +3,10 @@
 
 namespace CR::Entities {
 	void Enemy::tick() {
+		return;
+
 		const Vector2<float>& playerLocation = Engine::getPlayer()->getPos();
+		Weapons::Weapon* currentWeapon = inventory.getCurrentItem();
 
 		int xDiff = (int)round(playerLocation.x) - (int)round(position.x);
 		int yDiff = (int)round(playerLocation.y) - (int)round(position.y);
@@ -26,5 +29,11 @@ namespace CR::Entities {
 		}
 
 		currentWeapon->reload();
+	}
+
+	void Enemy::die() {
+		Engine::removeGameObject(healthbar, true);
+
+		Entity::die();
 	}
 }

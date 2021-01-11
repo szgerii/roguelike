@@ -154,6 +154,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Particle\Healthbar.cpp" />
+    <ClCompile Include="src\Particle\Particle.cpp" />
     <ClCompile Include="src\Object\Tiles\EndTile.cpp" />
     <ClCompile Include="src\Object\Tiles\PDestroyableTile.cpp" />
     <ClCompile Include="src\Object\Tiles\AmmoTile.cpp" />
@@ -161,7 +163,6 @@
     <ClCompile Include="src\Weapon\BoomBoomPistol.cpp" />
     <ClCompile Include="src\Entity\Bullets\ExplodingBullet.cpp" />
     <ClCompile Include="src\Entity\Enemies\Enemy.cpp" />
-    <ClCompile Include="src\Engine\CustomGameObject.cpp" />
     <ClCompile Include="src\Entity\Bullets\Bullet.cpp" />
     <ClCompile Include="src\Events\CollisionEvent.h" />
     <ClCompile Include="src\Object\Tiles\DestroyableTile.cpp" />
@@ -175,8 +176,13 @@
     <ClCompile Include="src\Utils.h" />
     <ClCompile Include="src\Object\Walls\LineWall.cpp" />
     <ClCompile Include="src\Weapon\Weapon.cpp" />
+    <ClCompile Include="src\Object\Tiles\WeaponTile.cpp" />
+    <ClCompile Include="src\Particle\TrackingParticle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Particle\Healthbar.h" />
+    <ClInclude Include="src\Particle\Particle.h" />
+    <ClInclude Include="src\Entity\Inventory.h" />
     <ClInclude Include="src\Object\Tiles\EndTile.h" />
     <ClInclude Include="src\Object\Tiles\PDestroyableTile.h" />
     <ClInclude Include="src\Object\Tiles\AmmoTile.h" />
@@ -197,6 +203,8 @@
     <ClInclude Include="src\Object\Tiles\Tile.h" />
     <ClInclude Include="src\Object\Walls\LineWall.h" />
     <ClInclude Include="src\Weapon\Weapon.h" />
+    <ClInclude Include="src\Object\Tiles\WeaponTile.h" />
+    <ClInclude Include="src\Particle\TrackingParticle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

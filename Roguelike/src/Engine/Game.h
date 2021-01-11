@@ -5,8 +5,6 @@
 #include "Utils.h"
 #include <string>
 
-#define WHITE FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-
 namespace CR {
 	enum Direction : char {
 		LEFT, UP, RIGHT, DOWN
@@ -34,5 +32,5 @@ namespace CR::Engine {
 	bool altPressed();
 	int addGUIText(std::string stat);
 	void modifyGUIText(int index, std::string stat);
-	void addToOverlay(int x, int y, char ch, unsigned short color);
+	void addToOverlay(const Vector2<int>&, char ch, unsigned short color);
 }

@@ -1,7 +1,8 @@
-#include <stdexcept>
 #include <cmath>
 #include "Entity.h"
 #include "Engine/Game.h"
+#include "Utils.h"
+#include "Particle/TrackingParticle.h"
 
 namespace CR::Entities {
 	float Entity::getHealth() const {
@@ -49,19 +50,77 @@ namespace CR::Entities {
 			health = maxHealth;
 	}
 
-	Weapons::Weapon* Entity::getWeapon() const {
-		return currentWeapon;
-	}
+	void Entity::meleeAttack(Direction direction) {
+		if (getCurrentTime() - lastMeleeTime < meleeCooldown)
+			return;
 
-	void Entity::changeWeapon(Weapons::Weapon* newWeapon, bool noDelete) {		
-		if (currentWeapon != nullptr) {
-			currentWeapon->changeOwner(nullptr);
+		int x, y, offset;
+		switch (direction) {
+		case LEFT:
+		case RIGHT:
+			offset = direction == LEFT ? -1 : 1;
+			x = (int)round(position.x) + offset;
 
-			if (!noDelete)
-				delete currentWeapon;
+			for (int i = -1; i <= 1; i++) {
+				y = (int)round(position.y) + i;
+				Engine::addGameObject(new Particles::TrackingParticle('#', FOREGROUND_BLUE | FOREGROUND_GREEN, 100, this, { offset, i }));
+
+				GameObject* collObj = Engine::objectFromCoord({ x, y });
+				if (collObj == nullptr)
+					continue;
+
+				collObj->hurt(meleeDamage, this);
+			}
+
+			if (x != 1) {
+				Engine::addGameObject(new Particles::TrackingParticle('#', FOREGROUND_BLUE | FOREGROUND_GREEN, 100, this, { offset * 2, 0 }));
+				GameObject* collObj = Engine::objectFromCoord({ (int)round(position.x) + offset * 2, y - 1 });
+				
+				if (collObj == nullptr)
+					break;
+
+				collObj->hurt(meleeDamage, this);
+			}
+
+			break;
+
+		case UP:
+		case DOWN:
+			offset = direction == UP ? -1 : 1;
+			y = (int)round(position.y) + offset;
+
+			for (int i = -1; i <= 1; i++) {
+				x = (int)round(position.x) + i;
+
+				Engine::addGameObject(new Particles::TrackingParticle('#', FOREGROUND_BLUE | FOREGROUND_GREEN, 100, this, { i, offset }));
+
+				GameObject* collObj = Engine::objectFromCoord({ x, y });
+				if (collObj == nullptr)
+					continue;
+
+				collObj->hurt(meleeDamage, this);
+			}
+
+			if (y != 1) {
+				Engine::addGameObject(new Particles::TrackingParticle('#', FOREGROUND_BLUE | FOREGROUND_GREEN, 100, this, { 0, offset * 2 }));
+				GameObject* collObj = Engine::objectFromCoord({ x - 1, (int)round(position.y) + offset * 2 });
+				if (collObj == nullptr)
+					break;
+
+				collObj->hurt(meleeDamage, this);
+			}
+
+			break;
 		}
 
-		currentWeapon = newWeapon;
-		currentWeapon->changeOwner(this);
+		lastMeleeTime = getCurrentTime();
+	}
+
+	bool Entity::pickUpItem(Weapons::Weapon* item) {
+		return inventory.pickUpItem(item);
+	}
+
+	Weapons::Weapon* Entity::getCurrentWeapon() {
+		return inventory.getCurrentItem();
 	}
 }

@@ -24,10 +24,11 @@ namespace CR {
 	}
 
 	void GameObject::die() {
-		Engine::removeGameObject(this);
+		Engine::removeGameObject(this, true);
 	}
 
 	void GameObject::updateCollision() {
-		Engine::addCollision((int) round(position.x), (int) round(position.y), this);
+		if (!customObject)
+			Engine::addCollision((int) round(position.x), (int) round(position.y), this);
 	}
 }

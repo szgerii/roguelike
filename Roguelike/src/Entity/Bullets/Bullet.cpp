@@ -42,10 +42,6 @@ namespace CR::Entities {
 		}
 	}
 
-	void Bullet::die() {
-		Engine::removeGameObject(this, true);
-	}
-
 	void Bullet::addToIgnoreList(GameObject* obj) {
 		ignoreList.push_back(obj);
 	}
