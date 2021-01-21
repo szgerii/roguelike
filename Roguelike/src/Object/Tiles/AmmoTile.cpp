@@ -4,12 +4,15 @@
 
 namespace CR::Objects {
 	void AmmoTile::hurt(float amount, GameObject* from) {
-		Weapons::Weapon* playerWeapon = ((Entities::Player*)Engine::getPlayer())->getCurrentWeapon();
+		if (from == Engine::getPlayer()) {
+			Weapons::Weapon* playerWeapon = ((Entities::Player*)Engine::getPlayer())->getCurrentWeapon();
 
-		if (playerWeapon == nullptr)
-			return;
+			if (playerWeapon == nullptr)
+				return;
 
-		playerWeapon->addAmmo(playerWeapon->getPickupSize());
+			playerWeapon->addAmmo(playerWeapon->getPickupSize());
+		}
+
 		die();
 	}
 }

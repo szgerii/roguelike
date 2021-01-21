@@ -3,7 +3,6 @@
 #include "Engine/GameObject.h"
 #include "Engine/Game.h"
 #include "Entity/Entity.h"
-#include "Entity/Player.h"
 
 namespace CR::Entities {
 	class Bullet : public Entity {
@@ -16,6 +15,8 @@ namespace CR::Entities {
 	public:
 		Bullet(char skin, unsigned short skinColor, Vector2<float> start, float speed, float damage, Direction direction, GameObject* sender, bool initialCollisionCheck=true)
 			: Entity(skin, skinColor, start, 1), speed(speed), damage(damage), direction(direction), sender(sender) {
+			type = Type::BULLET;
+			
 			if (initialCollisionCheck)
 				collisionCheck();
 		}

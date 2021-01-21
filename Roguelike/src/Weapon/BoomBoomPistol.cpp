@@ -2,27 +2,10 @@
 #include "Entity/Bullets/ExplodingBullet.h"
 
 namespace CR::Weapons {
-	void BoomBoomPistol::fire(Direction direction) {
-		namespace chr = std::chrono;
-
-		if (magazine <= 0 || getCurrentTime() - lastFireTime < cooldown || owner == nullptr)
-			return;
-
-		Entities::ExplodingBullet* bullet = nullptr;
-		Vector2<float> startPos = owner->getPos();
-		if (direction == Direction::LEFT || direction == Direction::RIGHT) {
-			startPos.x += direction == Direction::LEFT ? -1 : 1;
-			bullet = new Entities::ExplodingBullet('-', FG_WHITE, startPos, hBulletSpeed, damage, direction, owner);
-		} else {
-			startPos.y += direction == Direction::UP ? -1 : 1;
-			bullet = new Entities::ExplodingBullet('-', FG_WHITE, startPos, vBulletSpeed, damage, direction, owner);
-		}
-
-		bullet->addToIgnoreList(owner);
-		Engine::addGameObject(bullet);
-		magazine--;
-
-		lastFireTime = getCurrentTime();
-		drawStat();
+	GameObject* BoomBoomPistol::getNewBullet(const Vector2<float>& startPos, Direction direction) {
+		if (direction == Direction::LEFT || direction == Direction::RIGHT)
+			return new Entities::ExplodingBullet('o', owner->getSkinColor(), startPos, hBulletSpeed, damage * dmgMult, direction, owner, true);
+		else
+			return new Entities::ExplodingBullet('o', owner->getSkinColor(), startPos, vBulletSpeed, damage * dmgMult, direction, owner, true);
 	}
 }

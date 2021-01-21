@@ -4,7 +4,8 @@
 
 namespace CR::Objects {
 	void HealthTile::hurt(float amount, GameObject* from) {
-		((Entities::Player*) Engine::getPlayer())->heal((float) healthAmount);
+		if (from->getType() == GameObject::Type::ENEMY || from->getType() == GameObject::Type::PLAYER)
+			((Entities::Entity*) from)->heal((float) healthAmount);
 
 		die();
 	}

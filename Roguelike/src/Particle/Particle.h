@@ -10,8 +10,8 @@ namespace CR::Particles {
 
 	public:
 		Particle(char skin, unsigned short skinColor, const Vector2<int>& pos, int durationMs)
-			: CustomGameObject(skin, skinColor, { (float)pos.x, (float)pos.y }), duration(durationMs) {
-			start = getCurrentTime();
+			: CustomGameObject(skin, skinColor, { (float)pos.x, (float)pos.y }), duration(durationMs), start(getCurrentTime()) {
+			type = Type::PARTICLE;
 		}
 
 		virtual void tick();

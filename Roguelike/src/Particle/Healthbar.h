@@ -6,11 +6,12 @@
 namespace CR::Particles {
 	class Healthbar : public TrackingParticle {
 	public:
-		unsigned short activeColor = BACKGROUND_RED | BACKGROUND_INTENSITY, inactiveColor = BACKGROUND_RED;
+		unsigned short activeColor, inactiveColor;
 
-		Healthbar(Entities::Entity* target)
-			: TrackingParticle(' ', 0, 100000, target, { 0, -1 }) {}
+		Healthbar(Entities::Entity* target, unsigned short activeColor = 0, unsigned short inactiveColor = FOREGROUND_RED)
+			: TrackingParticle('_', 0, 0, target, { 0, -1 }), activeColor(activeColor), inactiveColor(inactiveColor) {}
 
+		virtual void tick() {}
 		virtual void render(CHAR_INFO* screen, int mapWidth, int mapHeight) const;
 	};
 }

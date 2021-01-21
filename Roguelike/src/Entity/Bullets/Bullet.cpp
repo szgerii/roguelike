@@ -32,7 +32,7 @@ namespace CR::Entities {
 	void Bullet::collisionCheck() {
 		GameObject* collObj = Engine::objectFromCoord({ (int)round(position.x), (int)round(position.y) });
 
-		if (collObj != nullptr && collObj != this) {
+		if (collObj != nullptr && collObj->getType() != Type::BULLET && collObj->getType() != sender->getType()) {
 			for (auto& obj : ignoreList)
 				if (obj == collObj)
 					return;

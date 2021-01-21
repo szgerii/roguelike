@@ -74,11 +74,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)bin-inter\$(Configuration)-$(Platform)\</IntDir>
+    <IncludePath>$(ProjectDir)src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)bin-inter\$(Configuration)-$(Platform)\</IntDir>
+    <IncludePath>$(ProjectDir)src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -99,6 +101,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\src</AdditionalIncludeDirectories>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,12 +157,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Weapon\Fridge.cpp" />
+    <ClCompile Include="src\Entity\Bullets\SotiBullet.cpp" />
+    <ClCompile Include="src\Entity\Bullets\LongShotBullet.cpp" />
+    <ClCompile Include="src\Weapon\LongShot.cpp" />
+    <ClCompile Include="src\Weapon\Soti.cpp" />
+    <ClCompile Include="src\Entity\Enemies\ShootyBoi.cpp" />
+    <ClCompile Include="src\Weapon\Enemy\BoomBoomLine.cpp" />
+    <ClCompile Include="src\Entity\Bullets\ExplodingLineBullet.cpp" />
+    <ClCompile Include="src\Entity\Enemies\Pavaka.cpp" />
     <ClCompile Include="src\Particle\Healthbar.cpp" />
     <ClCompile Include="src\Particle\Particle.cpp" />
     <ClCompile Include="src\Object\Tiles\EndTile.cpp" />
     <ClCompile Include="src\Object\Tiles\PDestroyableTile.cpp" />
     <ClCompile Include="src\Object\Tiles\AmmoTile.cpp" />
     <ClCompile Include="src\Object\Tiles\HealthTile.cpp" />
+    <ClCompile Include="src\Utils.cpp" />
     <ClCompile Include="src\Weapon\BoomBoomPistol.cpp" />
     <ClCompile Include="src\Entity\Bullets\ExplodingBullet.cpp" />
     <ClCompile Include="src\Entity\Enemies\Enemy.cpp" />
@@ -173,13 +186,36 @@
     <ClCompile Include="src\Engine\GameObject.cpp" />
     <ClCompile Include="src\Engine\Game.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Utils.h" />
+    <ClCompile Include="src\Entity\Enemies\Turret.cpp" />
+    <ClCompile Include="src\Engine\Wave.cpp" />
+    <ClCompile Include="src\Entity\Bullets\StunBullet.cpp" />
+    <ClInclude Include="src\Menus\UltimateUpgradeMenu.h" />
+    <ClInclude Include="src\Weapon\Fridge.h" />
+    <ClInclude Include="src\Entity\Bullets\SotiBullet.h" />
+    <ClInclude Include="src\Entity\Bullets\LongShotBullet.h" />
+    <ClInclude Include="src\Weapon\LongShot.h" />
+    <ClInclude Include="src\Weapon\Soti.h" />
+    <ClInclude Include="src\Entity\Property.h" />
+    <ClInclude Include="src\Entity\Enemies\ShootyBoi.h" />
+    <ClInclude Include="src\Menus\Options.h" />
+    <ClInclude Include="src\Menus\UpgradeMenu.h" />
+    <ClInclude Include="src\Weapon\Enemy\BoomBoomLine.h" />
+    <ClInclude Include="src\Entity\Bullets\ExplodingLineBullet.h" />
+    <ClInclude Include="src\Menus\GameOverMenu.h" />
+    <ClInclude Include="src\Utils.h" />
     <ClCompile Include="src\Object\Walls\LineWall.cpp" />
     <ClCompile Include="src\Weapon\Weapon.cpp" />
     <ClCompile Include="src\Object\Tiles\WeaponTile.cpp" />
     <ClCompile Include="src\Particle\TrackingParticle.cpp" />
+    <ClInclude Include="src\Entity\Enemies\Turret.h" />
+    <ClInclude Include="src\Engine\Wave.h" />
+    <ClInclude Include="src\Entity\Bullets\StunBullet.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Entity\Enemies\Pavaka.h" />
+    <ClInclude Include="src\Menus\PauseMenu.h" />
+    <ClInclude Include="src\Menus\MainMenu.h" />
+    <ClInclude Include="src\Menus\Menu.h" />
     <ClInclude Include="src\Particle\Healthbar.h" />
     <ClInclude Include="src\Particle\Particle.h" />
     <ClInclude Include="src\Entity\Inventory.h" />

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
+#include <array>
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -19,8 +20,22 @@
 #include "Object/Tiles/EndTile.h"
 #include "Object/Tiles/DestroyableTile.h"
 #include "Object/Tiles/PDestroyableTile.h"
+#include "Object/Tiles/WeaponTile.h"
 #include "Entity/Player.h"
+#include "Entity/Enemies/Pavaka.h"
+#include "Entity/Enemies/ShootyBoi.h"
+#include "Entity/Enemies/Turret.h"
+#include "Weapon/Weapon.h"
+#include "Weapon/BoomBoomPistol.h"
+#include "Weapon/Soti.h"
+#include "Weapon/LongShot.h"
+#include "Weapon/Fridge.h"
 #include "Events/KeyEvent.h"
+#include "Menus/MainMenu.h"
+#include "Menus/PauseMenu.h"
+#include "Menus/GameOverMenu.h"
+#include "Menus/UpgradeMenu.h"
+#include "Engine/Wave.h"
 
 const static float fps = 80;
 const static unsigned short mapWidth = 120, mapHeight = 40;
@@ -35,6 +50,16 @@ static CR::GameObject* player;
 static std::queue<CR::GameObject*> gameObjectAddQueue;
 static std::queue<std::pair<CR::GameObject*, bool>> gameObjectRemoveQueue;
 
+// Room Generation
+static CR::Difficulty difficulty;
+static CR::MapGenerationSetting mapGenerationSetting;
+static std::vector<CR::Entities::Enemy*> enemies;
+static std::vector<CR::Objects::PDestroyableTile*> pTiles;
+static std::vector<CR::Weapons::Weapon*> weapons;
+static std::vector<CR::Wave*> waves;
+static int roomCount = 0, waveIndex = 0, lastWeaponTile = -1, wavesSinceLastShop;
+static bool firstMove = true, genNextLevel = false, nextWave = false, shopMaxedOut = false;
+
 static CR::GameObject* collisionMap[mapWidth][mapHeight];
 
 static std::unordered_map<char, bool> inputMap;
@@ -43,7 +68,10 @@ bool ctrlActive = false, shiftActive = false, altActive = false;
 // DEBUG (TODO: remove)
 static int fpsCounter, tpsCounter, dropsCounter;
 
-static bool running = true;
+static bool running = true, paused = false, backToMainMenu = false, quit = false;
+
+static void generateRandomRoom();
+static void handleGameObjects();
 
 static void writeStringToScreenBuffer(std::string str, unsigned short color, int x, int y) {
 	for (size_t i = 0; i < str.length(); i++)
@@ -52,15 +80,9 @@ static void writeStringToScreenBuffer(std::string str, unsigned short color, int
 
 static void processInput() {
 	DWORD numOfInputsAvailable, numOfInputsRead;
-	INPUT_RECORD* inputs = nullptr;
-
-	// Input processing
 	GetNumberOfConsoleInputEvents(inputBuffer, &numOfInputsAvailable);
 
-	if (inputs != nullptr)
-		delete[] inputs;
-	inputs = new INPUT_RECORD[numOfInputsAvailable];
-
+	INPUT_RECORD* inputs = new INPUT_RECORD[numOfInputsAvailable];
 	ReadConsoleInputA(inputBuffer, inputs, numOfInputsAvailable, &numOfInputsRead);
 	for (size_t i = 0; i < numOfInputsRead; i++) {
 		if (inputs[i].EventType != KEY_EVENT || inputs[i].Event.KeyEvent.uChar.AsciiChar == '\0')
@@ -68,23 +90,47 @@ static void processInput() {
 
 		CR::KeyEvent ke(inputs[i].Event.KeyEvent);
 
-		if (ke.keyValue == 'n' && ke.keyDown)
-			CR::Engine::generateRandomRoom();
+		if (ke.keyDown) {
+			if (ke.keyCode == 27) {
+				CR::Menus::PauseMenu menu = CR::Menus::PauseMenu<mapWidth, mapHeight>(screenBuffer, inputBuffer);
+				paused = true;
+				int result = menu.show();
+
+				switch (result) {
+				case menu.Results::CONTINUE:
+					break;
+
+				case menu.Results::BACK_TO_MAIN_MENU:
+					running = false;
+					backToMainMenu = true;
+					break;
+
+				case menu.Results::QUIT:
+					running = false;
+					quit = true;
+					break;
+				}
+			} else if (firstMove) {
+				for (auto& enemy : enemies)
+					enemy->setFreeze(false);
+
+				for (auto& pTile : pTiles)
+					CR::Engine::removeGameObject(pTile, true);
+
+				firstMove = false;
+			}
+		}
 
 		inputMap[tolower(ke.keyValue)] = ke.keyDown;
 
 		unsigned int cks = inputs[i].Event.KeyEvent.dwControlKeyState;
-
+		
 		ctrlActive = (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) > 0;
 		shiftActive = (cks & SHIFT_PRESSED) > 0;
 		altActive = (cks & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) > 0;
-
-		if (ke.keyValue == 'u')
-			running = false;
-
-		for (size_t i = 0; i < gameObjects.size(); i++)
-			gameObjects[i]->onKeyEvent(ke);
 	}
+
+	delete[] inputs;
 }
 
 static void updateCollision() {
@@ -102,7 +148,8 @@ static void tick() {
 			overlay[i][j] = CHAR_INFO();
 
 	for (auto& object : gameObjects)
-		object->tick();
+		if (!object->getFreeze())
+			object->tick();
 }
 
 static void render() {
@@ -119,8 +166,41 @@ static void render() {
 
 	for (size_t i = 0; i < mapHeight; i++) {
 		for (size_t j = 0; j < mapWidth; j++) {
-			if (overlay[i][j].Char.AsciiChar != '\0')
+			if (overlay[i][j].Char.AsciiChar == '\0')
+				continue;
+			
+			bool hasBG = (overlay[i][j].Attributes & (unsigned short)BG_WHITE) != 0;
+			
+			if (hasBG) {
 				screen[i][j] = overlay[i][j];
+			} else {
+				// Merge
+				bool fgRed = (overlay[i][j].Attributes & FOREGROUND_RED) != 0;
+				bool fgGreen = (overlay[i][j].Attributes & FOREGROUND_GREEN) != 0;
+				bool fgBlue = (overlay[i][j].Attributes & FOREGROUND_BLUE) != 0;
+				bool fgIntensity = (overlay[i][j].Attributes & FOREGROUND_INTENSITY) != 0;
+				screen[i][j].Char.AsciiChar = overlay[i][j].Char.AsciiChar;
+
+				if (fgRed)
+					screen[i][j].Attributes |= FOREGROUND_RED;
+				else
+					screen[i][j].Attributes &= ~FOREGROUND_RED;
+
+				if (fgGreen)
+					screen[i][j].Attributes |= FOREGROUND_GREEN;
+				else
+					screen[i][j].Attributes &= ~FOREGROUND_GREEN;
+
+				if (fgBlue)
+					screen[i][j].Attributes |= FOREGROUND_BLUE;
+				else
+					screen[i][j].Attributes &= ~FOREGROUND_BLUE;
+
+				if (fgIntensity)
+					screen[i][j].Attributes |= FOREGROUND_INTENSITY;
+				else
+					screen[i][j].Attributes &= ~FOREGROUND_INTENSITY;
+			}
 		}
 	}
 
@@ -145,22 +225,46 @@ static void render() {
 
 static void handleGameObjects() {
 	while (!gameObjectAddQueue.empty()) {
+		if (gameObjectAddQueue.front()->getType() == CR::GameObject::Type::ENEMY)
+			enemies.push_back((CR::Entities::Enemy*)gameObjectAddQueue.front());
+
 		gameObjects.push_back(gameObjectAddQueue.front());
 		gameObjectAddQueue.pop();
 	}
 
 	while (!gameObjectRemoveQueue.empty()) {
-		auto iter = std::find(gameObjects.begin(), gameObjects.end(), gameObjectRemoveQueue.front().first);
+		auto gameObjectsIter = std::find(gameObjects.begin(), gameObjects.end(), gameObjectRemoveQueue.front().first);
 
-		if (iter != gameObjects.end()) {
-			gameObjects.erase(iter);
+		if (gameObjectsIter != gameObjects.end()) {
+			gameObjects.erase(gameObjectsIter);
 
 			if (gameObjectRemoveQueue.front().second)
 				delete gameObjectRemoveQueue.front().first;
 		}
 
+		auto enemiesIter = std::find(enemies.begin(), enemies.end(), gameObjectRemoveQueue.front().first);
+		if (enemiesIter != enemies.end())
+			enemies.erase(enemiesIter);
+
 		gameObjectRemoveQueue.pop();
 	}
+}
+
+static void roomCleanUp(bool partial = false) {
+	((CR::Entities::Player*)player)->deleteHealthbar();
+	handleGameObjects();
+
+	for (auto& obj : gameObjects)
+		if (obj != player && (!partial || obj->getType() != CR::GameObject::Type::TILE))
+			CR::Engine::removeGameObject(obj, true);
+	((CR::Entities::Player*)player)->createHealthbar();
+	handleGameObjects();
+
+	enemies.clear();
+	inputMap.clear();
+	ctrlActive = false;
+	shiftActive = false;
+	altActive = false;
 }
 
 static void gameLoop() {
@@ -177,7 +281,12 @@ static void gameLoop() {
 	while (running) {
 		hrclock::time_point currentTime = hrclock::now();
 		long long elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
-		lag += elapsed;
+		
+		if (!paused)
+			lag += elapsed;
+		else
+			paused = false;
+
 		lastTime = currentTime;
 
 		if (lag > msPerUpdate * 2)
@@ -192,6 +301,26 @@ static void gameLoop() {
 			tpsTemp++;
 		}
 		render();
+
+		if (nextWave) {
+			roomCleanUp(true);
+			waveIndex++;
+			wavesSinceLastShop++;
+			firstMove = true;
+
+			if (waveIndex == waves.size())
+				genNextLevel = true;
+			else
+				waves[waveIndex]->activate();
+
+			nextWave = false;
+		}
+
+		if (genNextLevel) {
+			generateRandomRoom();
+			genNextLevel = false;
+		}
+
 		fpsTemp++;
 
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(hrclock::now() - lastFpsCheck).count() > 1000) {
@@ -207,11 +336,329 @@ static void gameLoop() {
 	}
 }
 
-static std::vector<CR::GameObject*> roomObjects;
+static void generateRandomRoom() {
+	roomCleanUp();
 
-// min, max inclusive
-static int getRandomNumberBetween(int min, int max) {
-	return (rand() % (max - min + 1)) + min;	
+	waves.clear();
+	waveIndex = 0;
+	roomCount++;
+	lastWeaponTile++;
+	CR::Entities::Player* castPlayer = (CR::Entities::Player*)player;
+
+	if (!shopMaxedOut && (wavesSinceLastShop >= 3 || (wavesSinceLastShop >= 2 && CR::getRandomNumberBetween(0, 1) == 0))) {
+		CR::Menus::UpgradeMenu<mapWidth, mapHeight> sm(screenBuffer, inputBuffer);
+
+		switch (sm.show()) {
+		case sm.MAX_HEALTH:
+			if (castPlayer->getMaxHealthProp().canUltimateUpgrade())
+				castPlayer->getMaxHealthProp().upgrade(true);
+			else
+				castPlayer->getMaxHealthProp().upgrade();
+			castPlayer->heal(castPlayer->getMaxHealth());
+			break;
+
+		case sm.MELEE_DAMAGE:
+			if (castPlayer->getMeleeDamageProp().canUltimateUpgrade())
+				castPlayer->getMeleeDamageProp().upgrade(true);
+			else
+				castPlayer->getMeleeDamageProp().upgrade();
+			break;
+
+		case sm.WEAPON_DAMAGE:
+			castPlayer->upgradeWeaponDamage();
+			break;
+
+		case sm.DAMAGE_REDUCTION:
+			if (castPlayer->getDamageReductionProp().canUltimateUpgrade())
+				castPlayer->getDamageReductionProp().upgrade(true);
+			else
+				castPlayer->getDamageReductionProp().upgrade();
+			break;
+
+		case sm.AMMO_PICKUP:
+			castPlayer->upgradePickupModifier();
+			break;
+
+		case sm.CANCEL:
+			shopMaxedOut = true;
+			break;
+		}
+		
+		wavesSinceLastShop = 0;
+	}
+
+	int noiseDensity = -1, iteration = -1, wallReq = -1, floorReq = -1;
+
+	using CR::MapGenerationSetting;
+	switch (mapGenerationSetting) {
+	case MapGenerationSetting::EMPTY:
+		noiseDensity = 0;
+		iteration = 0;
+		wallReq = 0;
+		floorReq = 0;
+		break;
+
+	case MapGenerationSetting::OPEN:
+		noiseDensity = 24;
+		iteration = 9;
+		wallReq = 4;
+		floorReq = 6;
+		break;
+
+	case MapGenerationSetting::NORMAL:
+		noiseDensity = 30;
+		iteration = 8;
+		wallReq = 4;
+		floorReq = 6;
+		break;
+
+	case MapGenerationSetting::TIGHT:
+		noiseDensity = 37;
+		iteration = 7;
+		wallReq = 4;
+		floorReq = 6;
+		break;
+
+	case MapGenerationSetting::FULL:
+		noiseDensity = 100;
+		iteration = 0;
+		wallReq = 0;
+		floorReq = 0;
+		break;
+	}
+
+	// 0 - floor
+	// 1 - wall
+	// 2 - start point
+	// 3 - tile
+	// 255 - etc
+	unsigned char room[mapWidth][mapHeight] = {};
+
+	// Border
+	for (int y = 0; y < mapHeight - 1; y++) {
+		if (y == 0 || y == mapHeight - 2) {
+			for (int x = 0; x < mapWidth; x++)
+				room[x][y] = 3;
+
+			continue;
+		}
+
+		room[0][y] = 3;
+		room[mapWidth - 1][y] = 3;
+	}
+
+	// Walls
+	for (int x = 1; x < mapWidth - 1; x++)
+		for (int y = 1; y < mapHeight - 2; y++)
+			room[x][y] = rand() % 100 < noiseDensity ? 1 : 0;
+
+	for (int i = 0; i < iteration; i++) {
+		for (int x = 1; x < mapWidth - 1; x++) {
+			for (int y = 1; y < mapHeight - 2; y++) {
+				int adjacentWalls = 0;
+
+				for (int j = x - 1; j <= x + 1; j++) {
+					for (int k = y - 1; k <= y + 1; k++) {
+						if (j == x && k == y)
+							continue;
+
+						if (room[j][k] == 1 || room[j][k] == 3)
+							adjacentWalls++;
+					}
+				}
+
+				int adjacentFloors = 8 - adjacentWalls;
+
+				if (room[x][y] == 0 && adjacentFloors < wallReq)
+					room[x][y] = 1;
+				else if (room[x][y] == 1 && adjacentFloors >= floorReq)
+					room[x][y] = 0;
+			}
+		}
+	}
+
+	int waveCount = -1;
+	switch (difficulty) {
+	case CR::Difficulty::EASY:
+		waveCount = min((int)(roomCount / 10) + 1, 5);
+		break;
+
+	case CR::Difficulty::NORMAL:
+		waveCount = min((int)(roomCount / 5) + 1, 7);
+		break;
+
+	case CR::Difficulty::HARD:
+		waveCount = min((int)(roomCount / 3) + 1, 8);
+		break;
+
+	case CR::Difficulty::VERY_HARD:
+		waveCount = min((int)round(roomCount / 1.8) + 1, 10);
+		break;
+	}
+
+	if (difficulty == CR::Difficulty::VERY_HARD)
+		castPlayer->heal(castPlayer->getMaxHealth());
+
+	int enemyPerWave = -1;
+	switch (difficulty) {
+	case CR::Difficulty::EASY:
+		enemyPerWave = min((int)(roomCount / 5) + 1, 5);
+		break;
+
+	case CR::Difficulty::NORMAL:
+		enemyPerWave = min((int)(roomCount / 3) + 1, 7);
+		break;
+
+	case CR::Difficulty::HARD:
+		enemyPerWave = min((int)(roomCount / 2) + 1, 9);
+		break;
+
+	case CR::Difficulty::VERY_HARD:
+		enemyPerWave = min((int)round(roomCount / 1.4) + 1, 11);
+		break;
+	}
+
+	int ammoTileCount = -1;
+	switch (difficulty) {
+	case CR::Difficulty::EASY:
+		ammoTileCount = min(enemyPerWave, 5);
+		break;
+
+	case CR::Difficulty::NORMAL:
+		ammoTileCount = min((int)round(enemyPerWave / 2.2), 3);
+		break;
+
+	case CR::Difficulty::HARD:
+		ammoTileCount = min((int)round(enemyPerWave / 2.8), 3);
+		break;
+
+	case CR::Difficulty::VERY_HARD:
+		ammoTileCount = min((int)round(enemyPerWave / 3), 4);
+		break;
+	}
+	if (ammoTileCount < 1)
+		ammoTileCount = 1;
+
+	int healthTileCount = -1;
+	switch (difficulty) {
+	case CR::Difficulty::EASY:
+		healthTileCount = min((int)round(enemyPerWave / 2.2), 2);
+		break;
+
+	case CR::Difficulty::NORMAL:
+		healthTileCount = min((int)round(enemyPerWave / 2.6), 3);
+		break;
+
+	case CR::Difficulty::HARD:
+		healthTileCount = min((int)round(enemyPerWave / 3.1), 3);
+		break;
+
+	case CR::Difficulty::VERY_HARD:
+		healthTileCount = 0;
+		break;
+	}
+	if (difficulty != CR::Difficulty::VERY_HARD && healthTileCount < 1)
+		healthTileCount = 1;
+
+	int weaponDropChance = 0;
+	switch (difficulty) {
+	case CR::Difficulty::EASY:
+		weaponDropChance = min(lastWeaponTile * 30, 80);
+		break;
+
+	case CR::Difficulty::NORMAL:
+		weaponDropChance = min(lastWeaponTile * 20, 70);
+		break;
+
+	case CR::Difficulty::HARD:
+		weaponDropChance = min(lastWeaponTile * 15, 65);
+		break;
+
+	case CR::Difficulty::VERY_HARD:
+		weaponDropChance = min(lastWeaponTile * 12, 50);
+		break;
+	}
+	bool dropWeaponTile = CR::getRandomNumberBetween(1, 100) <= weaponDropChance;
+	if (dropWeaponTile)
+		lastWeaponTile = -1;
+
+	// Player
+	int playerX = CR::getRandomNumberBetween(3, mapWidth / 4), playerY = CR::getRandomNumberBetween(3, mapHeight - 5);
+	for (int i = playerX - 2; i <= playerX + 2; i++)
+		for (int j = playerY - 2; j <= playerY + 2; j++)
+			room[i][j] = (i == playerX - 2 || i == playerX + 2 || j == playerY - 2 || j == playerY + 2) ? 0 : 0;
+
+	room[playerX][playerY] = 2;
+	castPlayer->moveTo({ (float)playerX, (float)playerY });
+
+	// End tile
+	int x, y;
+	do {
+		x = CR::getRandomNumberBetween((int)round(mapWidth * 0.8), mapWidth - 2);
+		y = CR::getRandomNumberBetween(1, mapHeight - 3);
+	} while (room[x][y] != 0 && room[x][y] != 1);
+	room[x][y] = 255;
+	gameObjects.push_back(new CR::Objects::EndTile({ x, y }));
+
+	// Random weapon
+	CR::Weapons::Weapon* weapon = nullptr;
+	if (dropWeaponTile && weapons.size() != 0) {
+		int index = CR::getRandomNumberBetween(0, weapons.size() - 1);
+		weapon = weapons[index];
+		weapons.erase(weapons.begin() + index);
+	}
+
+	for (int i = 0; i < waveCount; i++)
+		waves.push_back(new CR::Wave(enemyPerWave, ammoTileCount, healthTileCount, room[0], weapon));
+
+	// actually generate the map
+	for (int x = 0; x < mapWidth; x++) {
+		for (int y = 0; y < mapHeight - 1; y++) {
+			CR::GameObject* obj = nullptr;
+			bool skip = false;
+
+			switch (room[x][y]) {
+			case 1:
+				obj = new CR::Objects::DestroyableTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
+				break;
+
+			case 3:
+				obj = new CR::Objects::Tile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y });
+				break;
+
+			default:
+				skip = true;
+				break;
+			}
+
+			if (skip)
+				continue;
+
+			CR::Engine::addGameObject(obj);
+		}
+	}
+
+	waves[0]->activate();
+	firstMove = true;
+	handleGameObjects();
+}
+
+static void showMainMenu() {
+	CR::Menus::MainMenu menu = CR::Menus::MainMenu<mapWidth, mapHeight>(screenBuffer, inputBuffer);
+	int result = menu.show();
+
+	switch (result) {
+	case menu.Results::START:
+		break;
+
+	case menu.Results::TUTORIAL:
+		break;
+
+	case menu.Results::QUIT:
+		running = false;
+		quit = true;
+		break;
+	}
 }
 
 namespace CR::Engine {
@@ -234,146 +681,58 @@ namespace CR::Engine {
 		SetConsoleCursorInfo(screenBuffer, ci);
 		delete ci;
 
-		gameLoop();
+		showMainMenu();
 
-		// TODO: clean up
-	}
+		bool gameRunning = true;
 
-	void generateRandomRoom() {
-		for (auto& obj : roomObjects)
-			removeGameObject(obj, true);
+		while (gameRunning) {
+			for (auto& obj : gameObjects)
+				removeGameObject(obj, true);
 
-		handleGameObjects();
-
-		roomObjects.clear();
-
-		// 0 - floor
-		// 1 - wall
-		// 2 - start point
-		// 3 - end tile
-		// 4 - ammo tile
-		// 5 - health tile
-		// 6 - pdestructable tile (only the player can destroy it)
-		char room[mapWidth][mapHeight] = {};
-
-		// Border
-		for (int y = 0; y < mapHeight - 1; y++) {
-			if (y == 0 || y == mapHeight - 2) {
-				for (int x = 0; x < mapWidth; x++)
-					room[x][y] = 1;
-				
-				continue;
-			}
+			guiTexts.clear();
 			
-			room[0][y] = 1;
-			room[mapWidth - 1][y] = 1;
-		}
+			weapons.push_back(new Weapons::BoomBoomPistol());
+			weapons.push_back(new Weapons::Soti(12.0f, 4.0f));
+			weapons.push_back(new Weapons::LongShot(4.0f, 12.0f));
+			weapons.push_back(new Weapons::Fridge(3000, 0.76f, 0.4f));
+			weapons.push_back(new Weapons::Weapon("The Slow Burn", 13.0f, 0.2f, 0.16f, 1000, 10, 30, 8));
+			weapons.push_back(new Weapons::Weapon("The BRRRRR", 2, 0.9f, 0.58f, 112, 45, 320, 35));
 
-		// Walls
-		for (int x = 1; x < mapWidth - 1; x++)
-			for (int y = 1; y < mapHeight - 2; y++)
-				room[x][y] = rand() % 100 < 31 ? 1 : 0;
+			auto player = new Entities::Player({ 30, 30 });
+			player->pickUpItem(new Weapons::Weapon("The Generic", 5, 0.8f, 0.33f, 400, 20, 56, 20));
+			//for (int i = 0; i < 30; i++)
+			//	player->getMaxHealthProp().upgrade();
+			addGameObject(player);
+			setPlayer(player);
 
-		for (int i = 0; i < 5; i++) {
-			for (int x = 1; x < mapWidth - 1; x++) {
-			for (int y = 1; y < mapHeight - 2; y++) {
-				int adjacentWalls = 0;
+			if (!quit)
+				running = true;
 
-				for (int j = x - 1; j <= x + 1; j++) {
-					for (int k = y - 1; k <= y + 1; k++) {
-						if (j == x && k == y)
-							continue;
+			roomCount = 0;
+			wavesSinceLastShop = 0;
 
-						if (room[j][k] == 1)
-							adjacentWalls++;
-					}
-				}
+			generateRandomRoom();
+			gameLoop();
 
-				int adjacentFloors = 8 - adjacentWalls;
-
-				if (room[x][y] == 0 && adjacentFloors < 4)
-					room[x][y] = 1;
-				else if (room[x][y] == 1 && adjacentFloors >= 6)
-					room[x][y] = 0;
-			}
-			}
-		}
-
-		// Player
-		int playerX = getRandomNumberBetween(3, mapWidth / 4), playerY = getRandomNumberBetween(3, mapHeight - 4);
-		for (int i = playerX - 2; i <= playerX + 2; i++)
-			for (int j = playerY - 2; j <= playerY + 2; j++)
-				room[i][j] = (i == playerX - 2 || i == playerX + 2 || j == playerY - 2 || j == playerY + 2 ) ? 6 : 0;
-
-		room[playerX][playerY] = 2;
-		((Entities::Player*)getPlayer())->moveTo({ (float)playerX, (float)playerY });
-
-		// End tile
-		int endX = getRandomNumberBetween(mapWidth / 4 * 3, mapWidth - 2), endY = getRandomNumberBetween(3, mapHeight - 3);
-		room[endX][endY] = 3;
-
-		room[playerX][playerY] = 2;
-		((Entities::Player*)getPlayer())->moveTo({ (float)playerX, (float)playerY });
-
-		// Ammo tiles and health tiles
-		int ammoTiles = 5, healthTiles = 2;
-		while (ammoTiles > 0 || healthTiles > 0) {
-			int x = (rand() % (mapWidth - 2)) + 1;
-			int y = (rand() % (mapHeight - 3)) + 1;
-
-			if (room[x][y] != 0 && room[x][y] != 1)
-				continue;
-
-			if (ammoTiles > 0) {
-				room[x][y] = 4;
-				ammoTiles--;
+			if (quit) {
+				gameRunning = false;
+			} else if (backToMainMenu) {
+				showMainMenu();
+				backToMainMenu = false;
 			} else {
-				room[x][y] = 5;
-				healthTiles--;
-			}
-		}
+				Menus::GameOverMenu gom = Menus::GameOverMenu<mapWidth, mapHeight>(screenBuffer, inputBuffer);
+				int result = gom.show();
 
-		// actually generate the map
-		for (int x = 1; x < mapWidth - 1; x++) {
-			for (int y = 1; y < mapHeight - 2; y++) {
-				GameObject* obj;
-				bool skip = false;
-
-				switch (room[x][y]) {
-				case 1:
-					obj = new Objects::DestroyableTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
+				switch (result) {
+				case gom.Results::RESTART:
 					break;
 
-				case 3:
-					obj = new Objects::EndTile({ x, y });
-					break;
-
-				case 4:
-					obj = new Objects::AmmoTile({ x, y });
-					break;
-				
-				case 5:
-					obj = new Objects::HealthTile({ x, y }, 10);
-					break;
-
-				case 6:
-					obj = new Objects::PDestroyableTile(' ', BACKGROUND_RED | BACKGROUND_GREEN, { x, y }, 1);
-					break;
-				
-				default:
-					skip = true;
+				case gom.Results::QUIT:
+					gameRunning = false;
 					break;
 				}
-
-				if (skip)
-					continue;
-
-				roomObjects.push_back(obj);
-				addGameObject(obj);
 			}
 		}
-
-		handleGameObjects();
 	}
 
 	void addGameObject(GameObject* object) {
@@ -451,5 +810,45 @@ namespace CR::Engine {
 
 	void addToOverlay(const Vector2<int>& pos, char ch, unsigned short color) {
 		overlay[pos.y][pos.x] = CHAR_INFO{ (wchar_t)ch, color };
+	}
+
+	void gameOver() {
+		running = false;
+	}
+
+	void nextLevel() {
+		nextWave = true;
+	}
+
+	MapGenerationSetting getMapGenerationSetting() {
+		return mapGenerationSetting;
+	}
+
+	void setMapGenerationSetting(MapGenerationSetting mgs) {
+		mapGenerationSetting = mgs;
+	}
+
+	int getNumberOfEnemies() {
+		return enemies.size();
+	}
+	
+	Difficulty getDifficulty() {
+		return difficulty;
+	}
+
+	void setDifficulty(Difficulty diff) {
+		difficulty = diff;
+	}
+
+	int getRoomCount() {
+		return roomCount;
+	}
+
+	int getCurrentWaveNum() {
+		return waveIndex + 1;
+	}
+
+	int getNumOfWaves() {
+		return waves.size();
 	}
 }

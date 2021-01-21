@@ -36,4 +36,29 @@ namespace CR::Entities {
 
 		Entity::die();
 	}
+
+	void Enemy::createHealthbar() {
+		if (healthbar != nullptr)
+			deleteHealthbar();
+
+		healthbar = new Particles::Healthbar(this, 0, FOREGROUND_RED | FOREGROUND_INTENSITY);
+		Engine::addGameObject(healthbar);
+	}
+
+	void Enemy::deleteHealthbar() {
+		if (healthbar == nullptr)
+			return;
+
+		Engine::removeGameObject(healthbar, true);
+		healthbar = nullptr;
+	}
+
+	void Enemy::setFreeze(bool freeze) {
+		if (freeze)
+			deleteHealthbar();
+		else
+			createHealthbar();
+		
+		this->freeze = freeze;
+	}
 }

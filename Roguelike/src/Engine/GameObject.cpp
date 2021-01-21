@@ -19,8 +19,20 @@ namespace CR {
 		return position.y;
 	}
 
+	GameObject::Type GameObject::getType() const {
+		return type;
+	}
+	
 	Vector2<float> GameObject::getPos() const {
 		return position;
+	}
+
+	bool GameObject::getFreeze() const {
+		return freeze;
+	}
+
+	void GameObject::setFreeze(bool freeze) {
+		this->freeze = freeze;
 	}
 
 	void GameObject::die() {

@@ -1,19 +1,26 @@
 #pragma once
+#include <string>
 #include "Engine/GameObject.h"
 #include "Events/KeyEvent.h"
-//#include "Entity/Player.h"
 #include "Utils.h"
-#include <string>
 
 namespace CR {
-	enum Direction : char {
+	enum class Direction : char {
 		LEFT, UP, RIGHT, DOWN
+	};
+
+	enum class MapGenerationSetting : char {
+		EMPTY, OPEN, NORMAL, TIGHT, FULL
+	};
+
+	enum class Difficulty : char {
+		EASY, NORMAL, HARD, VERY_HARD
 	};
 }
 
 namespace CR::Engine {
 	void start();
-	void generateRandomRoom();
+	void nextLevel();
 	void addGameObject(CR::GameObject* object);
 	void removeGameObject(CR::GameObject* object, bool deleteObj=false);
 	void setRandomSeed(int seed);
@@ -33,4 +40,13 @@ namespace CR::Engine {
 	int addGUIText(std::string stat);
 	void modifyGUIText(int index, std::string stat);
 	void addToOverlay(const Vector2<int>&, char ch, unsigned short color);
+	void gameOver();
+	void setMapGenerationSetting(MapGenerationSetting mgs);
+	MapGenerationSetting getMapGenerationSetting();
+	int getNumberOfEnemies();
+	int getRoomCount();
+	int getCurrentWaveNum();
+	int getNumOfWaves();
+	Difficulty getDifficulty();
+	void setDifficulty(Difficulty diff);
 }

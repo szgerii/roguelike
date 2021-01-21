@@ -15,8 +15,7 @@ namespace CR::Entities {
 		virtual void tick();
 
 	protected:
-		bool dead = false;
-		long long deathTime;
 		virtual void collisionCheck();
+		virtual void handleHit(GameObject* obj);
 	};
 }
