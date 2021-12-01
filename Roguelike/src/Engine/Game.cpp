@@ -10,6 +10,7 @@
 #include <utility>
 #include <time.h>
 #include <string>
+#include <unordered_map>
 #include <map>
 #include <ctype.h>
 #include "Engine/Game.h"
@@ -68,6 +69,10 @@ bool ctrlActive = false, shiftActive = false, altActive = false;
 // DEBUG (TODO: remove)
 static int fpsCounter, tpsCounter, dropsCounter;
 
+// DEBUG (TODO: remove)
+static int keyPressDisplay;
+static std::vector<char> pressedKeys;
+
 static bool running = true, paused = false, backToMainMenu = false, quit = false;
 
 static void generateRandomRoom();
@@ -118,6 +123,11 @@ static void processInput() {
 					CR::Engine::removeGameObject(pTile, true);
 
 				firstMove = false;
+			}
+
+			auto b = std::find(pressedKeys.begin(), pressedKeys.end(), tolower(ke.keyValue));
+			if (b == pressedKeys.end()) {
+				pressedKeys.push_back(tolower(ke.keyValue));
 			}
 		}
 
@@ -431,6 +441,9 @@ static void generateRandomRoom() {
 	// 1 - wall
 	// 2 - start point
 	// 3 - tile
+	// 4 - enemy
+	// 5 - health
+	// 6 - ammo
 	// 255 - etc
 	unsigned char room[mapWidth][mapHeight] = {};
 
@@ -611,6 +624,8 @@ static void generateRandomRoom() {
 	for (int i = 0; i < waveCount; i++)
 		waves.push_back(new CR::Wave(enemyPerWave, ammoTileCount, healthTileCount, room[0], weapon));
 
+	waves[0]->activate();
+
 	// actually generate the map
 	for (int x = 0; x < mapWidth; x++) {
 		for (int y = 0; y < mapHeight - 1; y++) {
@@ -619,6 +634,9 @@ static void generateRandomRoom() {
 
 			switch (room[x][y]) {
 			case 1:
+				if (CR::Engine::objectFromCoord({ x, y })->getType() == CR::GameObject::Type::TILE) {
+					continue;
+				}
 				obj = new CR::Objects::DestroyableTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
 				break;
 
@@ -638,7 +656,6 @@ static void generateRandomRoom() {
 		}
 	}
 
-	waves[0]->activate();
 	firstMove = true;
 	handleGameObjects();
 }
@@ -700,8 +717,6 @@ namespace CR::Engine {
 
 			auto player = new Entities::Player({ 30, 30 });
 			player->pickUpItem(new Weapons::Weapon("The Generic", 5, 0.8f, 0.33f, 400, 20, 56, 20));
-			//for (int i = 0; i < 30; i++)
-			//	player->getMaxHealthProp().upgrade();
 			addGameObject(player);
 			setPlayer(player);
 
@@ -784,19 +799,19 @@ namespace CR::Engine {
 	}
 
 	bool keyPressed(char keyValue) {
-		return inputMap[tolower(keyValue)];
+		return GetKeyState(toupper(keyValue)) & 0x8000;
 	}
 
 	bool ctrlPressed() {
-		return ctrlActive;
+		return GetKeyState(VK_CONTROL) & 0x8000;
 	}
 	
 	bool shiftPressed() {
-		return shiftActive;
+		return GetKeyState(VK_SHIFT) & 0x8000;
 	}
 	
 	bool altPressed() {
-		return altActive;
+		return GetKeyState(VK_MENU) & 0x8000;
 	}
 
 	int addGUIText(std::string text) {

@@ -25,6 +25,7 @@ namespace CR {
 				x = getRandomNumberBetween((int)round(mapWidth * 0.25), (int)round(mapWidth * 0.75));
 				y = getRandomNumberBetween(1, mapHeight - 3);
 			} while (room[y * mapWidth + x] != 0 && room[y * mapWidth + x] != 1);
+			room[y * mapWidth + x] = 4;
 
 			switch (rand) {
 			case 1:
@@ -57,7 +58,6 @@ namespace CR {
 				shootyBoiCount++;
 				break;
 			}
-			room[y * mapWidth + x] = 255;
 			gameObjects[gameObjects.size() - 1]->setFreeze(true);
 		}
 
@@ -70,6 +70,7 @@ namespace CR {
 				x = getRandomNumberBetween((int)round(mapWidth * 0.25), (int)round(mapWidth * 0.75));
 				y = getRandomNumberBetween(1, mapHeight - 3);
 			} while (room[y * mapWidth + x] != 0 && room[y * mapWidth + x] != 1);
+			room[y * mapWidth + x] = 6;
 
 			room[y * mapWidth + x] = 255;
 			gameObjects.push_back(new Objects::AmmoTile({ x, y }));
@@ -82,6 +83,7 @@ namespace CR {
 				x = getRandomNumberBetween(0, mapWidth - 2);
 				y = getRandomNumberBetween(1, mapHeight - 3);
 			} while (room[y * mapWidth + x] != 0 && room[y * mapWidth + x] != 1);
+			room[y * mapWidth + x] = 5;
 
 			room[y * mapWidth + x] = 255;
 			gameObjects.push_back(new Objects::HealthTile({ x, y }, 13));

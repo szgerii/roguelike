@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cmath>
+#include <stdexcept>
 #include "Engine/GameObject.h"
 #include "Weapon/Weapon.h"
 #include "Object/Tiles/WeaponTile.h"

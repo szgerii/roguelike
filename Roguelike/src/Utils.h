@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cmath>
 #include <vector>
-
+	
 #ifndef FG_WHITE
 #define FG_WHITE (FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN)
 #endif
@@ -33,9 +33,11 @@ namespace CR {
 			Vector2<int> roundedPos = { (int)round(pos.x), (int)round(pos.y) };
 
 			int startX = roundedPos.x == 0 ? roundedPos.x : roundedPos.x - 1,
-				endX = roundedPos.x == Engine::getMapWidth() - 1 ? roundedPos.x : roundedPos.x + 1,
+				endX = roundedPos.x == 120 - 1 ? roundedPos.x : roundedPos.x + 1,
+				//endX = roundedPos.x == Engine::getMapWidth() - 1 ? roundedPos.x : roundedPos.x + 1,
 				startY = roundedPos.y == 0 ? roundedPos.y : roundedPos.y - 1,
-				endY = roundedPos.y == Engine::getMapHeight() - 1 ? roundedPos.y : roundedPos.y + 1;
+				//endY = roundedPos.y == Engine::getMapHeight() - 1 ? roundedPos.y : roundedPos.y + 1;
+				endY = roundedPos.y == 40 - 1 ? roundedPos.y : roundedPos.y + 1;
 
 			Vector2<int> closestCell = { startX, startY };
 			int minDistance = closestCell.getManhattanDistanceTo({ (int)round(x), (int)round(y) });

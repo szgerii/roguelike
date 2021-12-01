@@ -7,8 +7,8 @@ int debugTimeout = 0;
 namespace CR::Entities {
 	void Player::tick() {
 		float vDelta = 0, hDelta = 0;
-		bool sprintActive = Engine::keyPressed('o');
-		bool slowActive = Engine::keyPressed('q');
+		bool sprintActive = Engine::shiftPressed();
+		bool slowActive = Engine::ctrlPressed();
 		Weapons::Weapon* currentWeapon = inventory.getCurrentItem();
 
 		// Movement
@@ -18,8 +18,10 @@ namespace CR::Entities {
 			vDelta += sprintActive ? vRun : slowActive ? vSlow : vWalk;
 		if (Engine::keyPressed('a'))
 			hDelta -= sprintActive ? hRun : slowActive ? hSlow : hWalk;
-		if (Engine::keyPressed('d'))
+		if (Engine::keyPressed('d')) {
 			hDelta += sprintActive ? hRun : slowActive ? hSlow : hWalk;
+			//Engine::addGUIText(std::to_string(Engine::keyPressed('J')));
+		}
 
 		// Reload weapon
 		if (Engine::keyPressed('r') && currentWeapon != nullptr)
