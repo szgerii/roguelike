@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cmath>
 #include <vector>
-	
+
 #ifndef FG_WHITE
 #define FG_WHITE (FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN)
 #endif

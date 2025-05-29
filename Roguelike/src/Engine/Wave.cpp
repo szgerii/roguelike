@@ -24,7 +24,7 @@ namespace CR {
 			do {
 				x = getRandomNumberBetween((int)round(mapWidth * 0.25), (int)round(mapWidth * 0.75));
 				y = getRandomNumberBetween(1, mapHeight - 3);
-			} while (room[y * mapWidth + x] != 0 && room[y * mapWidth + x] != 1);
+			} while (room[y * mapWidth + x] != 0 /*&& room[y * mapWidth + x] != 1*/);
 			room[y * mapWidth + x] = 4;
 
 			switch (rand) {

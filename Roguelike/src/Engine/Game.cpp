@@ -627,11 +627,6 @@ static void generateRandomRoom() {
 		weapons.erase(weapons.begin() + index);
 	}
 
-	for (int i = 0; i < waveCount; i++)
-		waves.push_back(new CR::Wave(enemyPerWave, ammoTileCount, healthTileCount, room[0], weapon));
-
-	waves[0]->activate();
-
 	// actually generate the map
 	for (int x = 0; x < mapWidth; x++) {
 		for (int y = 0; y < mapHeight - 1; y++) {
@@ -662,6 +657,11 @@ static void generateRandomRoom() {
 			CR::Engine::addGameObject(obj);
 		}
 	}
+
+	for (int i = 0; i < waveCount; i++)
+		waves.push_back(new CR::Wave(enemyPerWave, ammoTileCount, healthTileCount, room[0], weapon));
+
+	waves[0]->activate();
 
 	firstMove = true;
 	handleGameObjects();
