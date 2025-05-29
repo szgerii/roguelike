@@ -275,12 +275,18 @@ static void roomCleanUp(bool partial = false) {
 	ctrlActive = false;
 	shiftActive = false;
 	altActive = false;
+
+	for (size_t i = 0; i < mapWidth; i++) {
+		for (size_t j = 0; j < mapHeight; j++) {
+			collisionMap[i][j] = nullptr;
+		}
+	}
 }
 
 static void gameLoop() {
 	using hrclock = std::chrono::high_resolution_clock;
 
-	long long msPerUpdate = (long long) round(1000 / fps);
+	long long nsPerUpdate = (long long) (round(1000 / fps) * 1000000);
 	long long lag = 0;
 	hrclock::time_point lastTime = hrclock::now();
 
@@ -290,7 +296,7 @@ static void gameLoop() {
 
 	while (running) {
 		hrclock::time_point currentTime = hrclock::now();
-		long long elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
+		long long elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - lastTime).count();
 		
 		if (!paused)
 			lag += elapsed;
@@ -299,15 +305,15 @@ static void gameLoop() {
 
 		lastTime = currentTime;
 
-		if (lag > msPerUpdate * 2)
+		if (lag > nsPerUpdate * 2)
 			dropsTemp++;
 
 		processInput();
-		while (lag > msPerUpdate) {
+		while (lag > nsPerUpdate) {
+			lag -= nsPerUpdate;
 			updateCollision();
 			tick();
 			handleGameObjects();
-			lag -= msPerUpdate;
 			tpsTemp++;
 		}
 		render();
@@ -630,11 +636,12 @@ static void generateRandomRoom() {
 	for (int x = 0; x < mapWidth; x++) {
 		for (int y = 0; y < mapHeight - 1; y++) {
 			CR::GameObject* obj = nullptr;
+			CR::GameObject* occupant = CR::Engine::objectFromCoord({ x, y });
 			bool skip = false;
 
 			switch (room[x][y]) {
 			case 1:
-				if (CR::Engine::objectFromCoord({ x, y })->getType() == CR::GameObject::Type::TILE) {
+				if (occupant != nullptr && occupant->getType() == CR::GameObject::Type::TILE) {
 					continue;
 				}
 				obj = new CR::Objects::DestroyableTile(' ', BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, { x, y }, 1);
