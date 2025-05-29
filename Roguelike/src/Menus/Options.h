@@ -33,20 +33,22 @@ namespace CR::Menus {
 		virtual int keyEventHandle(KeyEvent& ke) {
 			if (ke.keyDown && getCurrentTime() - this->lastStep > 100) {
 				int kv = tolower(ke.keyValue);
+				bool left = kv == 'a' || ke.keyCode == VK_LEFT;
+				bool right = kv == 'd' || ke.keyCode == VK_RIGHT;
 				
 				if (ke.keyCode == 13) {
 					return this->selectOption(this->options[this->selectedIndex]);
-				} else if (kv == 's') {
+				} else if (kv == 's' || ke.keyCode == VK_DOWN) {
 					this->nextOption();
-				} else if (kv == 'w') {
+				} else if (kv == 'w' || ke.keyCode == VK_UP) {
 					this->previousOption();
-				} else if (this->selectedIndex == 0 && kv == 'd' && diff != Difficulty::VERY_HARD) {
+				} else if (this->selectedIndex == 0 && right && diff != Difficulty::VERY_HARD) {
 					updateDiff(static_cast<Difficulty>((char)diff + 1));
-				} else if (this->selectedIndex == 0 && kv == 'a' && diff != Difficulty::EASY) {
+				} else if (this->selectedIndex == 0 && left && diff != Difficulty::EASY) {
 					updateDiff(static_cast<Difficulty>((char)diff - 1));
-				} else if (this->selectedIndex == 1 && kv == 'd' && mgs != MapGenerationSetting::FULL) {
+				} else if (this->selectedIndex == 1 && right && mgs != MapGenerationSetting::FULL) {
 					updateMgs(static_cast<MapGenerationSetting>((char)mgs + 1));
-				} else if (this->selectedIndex == 1 && kv == 'a' && mgs != MapGenerationSetting::EMPTY) {
+				} else if (this->selectedIndex == 1 && left && mgs != MapGenerationSetting::EMPTY) {
 					updateMgs(static_cast<MapGenerationSetting>((char)mgs - 1));
 				}
 

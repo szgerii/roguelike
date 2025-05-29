@@ -64,7 +64,7 @@ namespace CR::Menus {
 
 			ReadConsoleInputA(inputBuffer, inputs, numOfInputsAvailable, &numOfInputsRead);
 			for (size_t i = 0; i < numOfInputsRead; i++) {
-				if (inputs[i].EventType != KEY_EVENT || inputs[i].Event.KeyEvent.uChar.AsciiChar == '\0')
+				if (inputs[i].EventType != KEY_EVENT)// || inputs[i].Event.KeyEvent.uChar.AsciiChar == '\0')
 					continue;
 
 				CR::KeyEvent ke(inputs[i].Event.KeyEvent);
@@ -94,9 +94,9 @@ namespace CR::Menus {
 			if (ke.keyDown && getCurrentTime() - lastStep > 100) {
 				if (ke.keyCode == 13)
 					return selectOption(options[selectedIndex]);
-				else if (tolower(ke.keyValue) == 's')
+				else if (tolower(ke.keyValue) == 's' || ke.keyCode == VK_DOWN)
 					nextOption();
-				else if (tolower(ke.keyValue) == 'w')
+				else if (tolower(ke.keyValue) == 'w' || ke.keyCode == VK_UP)
 					previousOption();
 
 				lastStep = getCurrentTime();

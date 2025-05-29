@@ -44,7 +44,6 @@ namespace CR {
 
 			for (int x = startX; x <= endX; x++) {
 				for (int y = startY; y <= endY; y++) {
-					// is this even more efficient than just checking again?
 					if (x == startX && y == startY)
 						continue;
 

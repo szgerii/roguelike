@@ -831,6 +831,10 @@ namespace CR::Engine {
 	}
 
 	void addToOverlay(const Vector2<int>& pos, char ch, unsigned short color) {
+		if (pos.x < 0 || pos.x >= mapWidth || pos.y < 0 || pos.y >= mapHeight) {
+			return;
+		}
+
 		overlay[pos.y][pos.x] = CHAR_INFO{ (wchar_t)ch, color };
 	}
 
